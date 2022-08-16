@@ -32,3 +32,6 @@ or
 ```bash
   npx react-native run-android
 ```
+## Running on device:
+
+[How to run react native app on device?](https://reactnative.dev/docs/running-on-device)

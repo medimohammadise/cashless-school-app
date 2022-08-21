@@ -18,7 +18,25 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import Pushy from 'pushy-react-native';
-
+import PushNotification from 'react-native-push-notification';
+function displayNotification(title, message) {
+  PushNotification.createChannel(
+    {
+      channelId: 'special_id', // (required)
+      channelName: 'Special message', // (required)
+      channelDescription: 'Notification for special message', // (optional) default: undefined.
+      importance: 4, // (optional) default: 4. Int value of the Android notification importance
+      vibrate: true, // (optional) default: true. Creates the default vibration patten if true.
+    },
+    created => console.log(`createChannel returned '${created}'`), // (optional) callback returns whether the channel was created, false means it already existed.
+  );
+  PushNotification.localNotification({
+    channelId: 'special_id', //his must be same with channel id in create channel
+    title,
+    message,
+    actions: ['Yes', 'No'],
+  });
+}
 // Please place this code in App.js,
 // After the import statements, and before the Component class
 
@@ -26,29 +44,20 @@ import Pushy from 'pushy-react-native';
 Pushy.toggleInAppBanner(true);
 
 Pushy.setNotificationListener(async data => {
-  // Print notification payload data
   console.log('Received notification: ' + JSON.stringify(data));
-
-  // Notification title
-  let notificationTitle = 'MyApp';
-
-  // Attempt to extract the "message" property from the payload: {"message":"Hello World!"}
+  Alert.alert(data.message);
+  let notificationTitle = data.title || 'Title';
   let notificationText = data.message || 'Test notification';
 
-  // Android: Displays a system notification
-  // iOS: Displays an alert dialog
-  Pushy.notify(notificationTitle, notificationText, data);
+  displayNotification(notificationTitle, notificationText);
 
-  // Clear iOS badge count
-  Pushy.setBadge(0);
-});
+  Pushy.setNotificationClickListener(async data => {
+    // Display basic alert
+    Alert.alert('Notification click: ' + data.message);
 
-Pushy.setNotificationClickListener(async data => {
-  // Display basic alert
-  Alert.alert('Notification click: ' + data.message);
-
-  // Navigate the user to another page or
-  // execute other logic on notification click
+    // Navigate the user to another page or
+    // execute other logic on notification click
+  });
 });
 
 const Section = ({children, title}) => {
@@ -85,7 +94,7 @@ const App = () => {
     Pushy.register()
       .then(async deviceToken => {
         // Display an alert with device token
-        console.error(deviceToken);
+        console.log('Device Token: ', deviceToken);
         // Send the token to your backend server via an HTTP GET request
         //await fetch('https://your.api.hostname/register/device?token=' + deviceToken);
 

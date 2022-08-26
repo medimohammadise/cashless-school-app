@@ -34,7 +34,6 @@ function displayNotification(title, message) {
     channelId: 'special_id', //his must be same with channel id in create channel
     title,
     message,
-    actions: ['Yes', 'No'],
   });
 }
 // Please place this code in App.js,
@@ -44,16 +43,16 @@ function displayNotification(title, message) {
 Pushy.toggleInAppBanner(true);
 
 Pushy.setNotificationListener(async data => {
-  console.log('Received notification: ' + JSON.stringify(data));
+  console.log('Received notification: ', data);
   Alert.alert(data.message);
   let notificationTitle = data.title || 'Title';
   let notificationText = data.message || 'Test notification';
 
   displayNotification(notificationTitle, notificationText);
 
-  Pushy.setNotificationClickListener(async data => {
+  Pushy.setNotificationClickListener(async clickedData => {
     // Display basic alert
-    Alert.alert('Notification click: ' + data.message);
+    Alert.alert('Notification click: ' + clickedData.message);
 
     // Navigate the user to another page or
     // execute other logic on notification click

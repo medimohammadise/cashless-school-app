@@ -257,9 +257,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    // Pushy SDK for Android
     implementation 'me.pushy:sdk:1.0.86'
-
     // Pushy SDK for React Native Android
     implementation 'me.pushy:sdk-react-native:1.0.17'
     //noinspection GradleDynamicVersion

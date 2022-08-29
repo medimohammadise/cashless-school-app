@@ -8,6 +8,7 @@ import {
   useColorScheme,
   View,
   Alert,
+  Platform,
 } from 'react-native';
 
 import {
@@ -19,23 +20,24 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import Pushy from 'pushy-react-native';
 import PushNotification from 'react-native-push-notification';
-function displayNotification(title, message) {
-  PushNotification.createChannel(
-    {
-      channelId: 'special_id', // (required)
-      channelName: 'Special message', // (required)
-      channelDescription: 'Notification for special message', // (optional) default: undefined.
-      importance: 4, // (optional) default: 4. Int value of the Android notification importance
-      vibrate: true, // (optional) default: true. Creates the default vibration patten if true.
-    },
-    created => console.log(`createChannel returned '${created}'`), // (optional) callback returns whether the channel was created, false means it already existed.
-  );
-  PushNotification.localNotification({
-    channelId: 'special_id', //his must be same with channel id in create channel
-    title,
-    message,
-  });
-}
+
+// function displayNotification(title, message) {
+//   PushNotification.createChannel(
+//     {
+//       channelId: 'special_id', // (required)
+//       channelName: 'Special message', // (required)
+//       channelDescription: 'Notification for special message', // (optional) default: undefined.
+//       importance: 4, // (optional) default: 4. Int value of the Android notification importance
+//       vibrate: true, // (optional) default: true. Creates the default vibration patten if true.
+//     },
+//     created => console.log(`createChannel returned '${created}'`), // (optional) callback returns whether the channel was created, false means it already existed.
+//   );
+//   PushNotification.localNotification({
+//     channelId: 'special_id', //his must be same with channel id in create channel
+//     title,
+//     message,
+//   });
+// }
 // Please place this code in App.js,
 // After the import statements, and before the Component class
 
@@ -44,19 +46,32 @@ Pushy.toggleInAppBanner(true);
 
 Pushy.setNotificationListener(async data => {
   console.log('Received notification: ', data);
-  Alert.alert(data.message);
   let notificationTitle = data.title || 'Title';
   let notificationText = data.message || 'Test notification';
+  let notificationCategory = data.category;
 
-  displayNotification(notificationTitle, notificationText);
-
-  Pushy.setNotificationClickListener(async clickedData => {
-    // Display basic alert
-    Alert.alert('Notification click: ' + clickedData.message);
-
-    // Navigate the user to another page or
-    // execute other logic on notification click
-  });
+  if (notificationCategory === 'PIN_CODE') {
+    Pushy.notify('Private Message', 'You have a private message', data);
+  } else if (notificationCategory === 'CONFIRMATION') {
+    Pushy.notify('Confirmation', 'We need your confirmation', data);
+  } else {
+    Pushy.notify(notificationTitle, notificationText, data);
+  }
+});
+Pushy.setNotificationClickListener(async clickedData => {
+  console.log('Clicked=============', clickedData);
+  if (clickedData?.category === 'PIN_CODE') {
+    Alert.alert(`Heare is your PIN code: ${clickedData?.pincode}`);
+  } else if (clickedData?.category === 'CONFIRMATION') {
+    Alert.alert('Private', 'Your daughter want to pay for pizza, is it okay?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {text: 'OK', onPress: () => console.log('OK Pressed')},
+    ]);
+  }
 });
 
 const Section = ({children, title}) => {
@@ -89,24 +104,34 @@ const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
 
   useEffect(() => {
-    // Register the user for push notifications
+    Pushy.listen();
+
+    // Register the device for push notifications
     Pushy.register()
       .then(async deviceToken => {
-        // Display an alert with device token
-        console.log('Device Token: ', deviceToken);
+        // Write device token to device logs
+        console.log('Pushy device token: ' + deviceToken);
+
         // Send the token to your backend server via an HTTP GET request
         //await fetch('https://your.api.hostname/register/device?token=' + deviceToken);
 
         // Succeeded, optionally do something to alert the user
       })
       .catch(err => {
+        // Update UI
+
         // Handle registration errors
         console.error(err);
       });
-  }, []);
 
-  useEffect(() => {
-    Pushy.listen();
+    // Android-only code
+    if (Platform.OS === 'android') {
+      // Set system status bar color
+      StatusBar.setBackgroundColor('#000000');
+    }
+
+    // Light system status bar text
+    StatusBar.setBarStyle('light-content', true);
   }, []);
 
   const backgroundStyle = {
